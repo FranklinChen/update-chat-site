@@ -2,8 +2,9 @@ module Main where
 
 import Development.Shake hiding ((*>))
 
+import Data.Monoid ((<>))
 import Control.Arrow ((>>>))
-import Control.Monad (when)
+import Control.Monad.Extra
 import System.FilePath ((</>), takeDirectory)
 import qualified System.Directory as Directory
 import qualified GHC.Conc as Conc
@@ -21,25 +22,22 @@ defaultRootDir :: HostName.HostName -> FilePath
 defaultRootDir "childes.talkbank.org" = "/web/childes"
 defaultRootDir "talkbank.talkbank.org" = "/TalkBank"
 defaultRootDir "homebank.talkbank.org" = "/HomeBank"
-defaultRootDir hostName = error $ "Unknown host " ++ hostName
+defaultRootDir hostName = error $ "Unknown host " <> hostName
 
 main :: IO ()
 main = do
   -- Check all the dirs first.
   rootDir <- defaultRootDir <$> HostName.getHostName
-  rootDirExists <- Directory.doesDirectoryExist rootDir
-  when (not rootDirExists) $
-    fail $ "root dir " ++ rootDir ++ " does not exist"
+  unlessM (Directory.doesDirectoryExist rootDir) $
+    fail $ "root dir " <> rootDir <> " does not exist"
 
   let dataOrigDir = rootDir </> "data-orig"
-  dataOrigDirExists <- liftIO $ Directory.doesDirectoryExist dataOrigDir
-  when (not dataOrigDirExists) $
-    fail $ "data-orig dir " ++ dataOrigDir ++ " does not exist"
+  unlessM (liftIO $ Directory.doesDirectoryExist dataOrigDir) $
+    fail $ "data-orig dir " <> dataOrigDir <> " does not exist"
 
   let mediaDir = rootDir </> "media"
-  mediaDirExists <- liftIO $ Directory.doesDirectoryExist mediaDir
-  when (not mediaDirExists) $
-    fail $ "media dir " ++ mediaDir ++ " does not exist"
+  unlessM (liftIO $ Directory.doesDirectoryExist mediaDir) $
+    fail $ "media dir " <> mediaDir <> " does not exist"
 
   buildDir <- getShakeBuildDir
   numProcessors <- Conc.getNumProcessors
@@ -61,30 +59,53 @@ checkMediaFiles dataOrigDir mediaDir = do
   getDirectoryFiles dataOrigDir ["//*.cha"]
     >>= (mapM_ (reportChatFileDeps dataOrigDir mediaDir) >>> liftIO)
 
+-- | Report on existence of relevant dependent files (media, pic).
 reportChatFileDeps :: FilePath -- ^ data-orig
                    -> FilePath -- ^ media
                    -> FilePath -- ^ CHAT path relative to root
                    -> IO ()
-reportChatFileDeps dataOrigDir mediaDir relativeChatPath =
-  requiredMediaPaths chatPath chatMediaDir
-  >>= mapM_ (reportExistence chatPath) where
-    chatPath = dataOrigDir </> relativeChatPath
-    chatMediaDir = mediaDir </> takeDirectory relativeChatPath
+reportChatFileDeps dataOrigDir mediaDir relativeChatPath = do
+  let chatPath = dataOrigDir </> relativeChatPath
+  let chatMediaDir = mediaDir </> takeDirectory relativeChatPath
 
+  text <- ByteString.readFile chatPath
+
+  checkMedia chatPath chatMediaDir (Media.typeExpected text)
+  mapM_ (checkPic chatPath chatMediaDir) (Media.picRelativePaths text)
+
+-- | Report whether a specific dependent file exists.
 reportExistence :: FilePath -- ^ CHAT path
-                -> FilePath -- ^ an external Depp path
+                -> FilePath -- ^ an external dep path
                 -> IO ()
 reportExistence chatPath depPath = do
-  depExists <- Directory.doesFileExist depPath
-  when (not depExists) $
-    putStrLn $ chatPath ++ ": cannot find " ++ depPath
+  unlessM (Directory.doesFileExist depPath) $
+    putStrLn $ chatPath <> ": cannot find " <> depPath
 
--- | Required media files corresponding to a CHAT file.
---
--- Slurp in whole file as 'ByteString' since regex uses that.
-requiredMediaPaths :: FilePath -- ^ CHAT path
-                   -> FilePath -- ^ CHAT media dir for this file
-                   -> IO [FilePath]
-requiredMediaPaths chatPath chatMediaDir =
-  (Media.chatMediaRelativePaths >>> map (chatMediaDir </>))
-  <$> ByteString.readFile chatPath
+videoExtension :: FilePath
+videoExtension = ".mp4"
+
+audioExtensions :: [FilePath]
+audioExtensions = [".mp3", ".wav"]
+
+-- | Check whether what is expected exists. For audio, have to
+-- perform a search on multiple possible names!
+checkMedia :: FilePath -- ^ CHAT path
+           -> FilePath -- ^ CHAT media dir
+           -> Media.ExpectedType
+           -> IO ()
+checkMedia _ _ Media.Skip = pure ()
+checkMedia chatPath chatMediaDir (Media.Video name) =
+  reportExistence chatPath (chatMediaDir </> name <> videoExtension)
+checkMedia chatPath chatMediaDir (Media.Audio name) = do
+  let mediaBasePath = chatMediaDir </> name
+  unlessM (anyM (Directory.doesFileExist . (mediaBasePath <>))
+           audioExtensions) $
+    putStrLn $ chatPath <> ": cannot find media file with base name "
+                        <> mediaBasePath
+
+checkPic :: FilePath -- ^ CHAT path
+         -> FilePath -- ^ Chat media dir
+         -> FilePath -- ^ pic relative path
+         -> IO ()
+checkPic chatPath chatMediaDir picRelativePath =
+  reportExistence chatPath (chatMediaDir </> picRelativePath)

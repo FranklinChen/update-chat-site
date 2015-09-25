@@ -40,6 +40,7 @@ executable update-chat-site
                      , filepath
                      , bytestring
                      , hostname
+                     , extra
 
 test-suite spec
   type:                exitcode-stdio-1.0
