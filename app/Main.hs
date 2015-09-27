@@ -1,6 +1,6 @@
 module Main where
 
-import Development.Shake hiding ((*>))
+import Development.Shake
 
 import Data.Monoid ((<>))
 import Control.Arrow ((>>>))
@@ -84,11 +84,10 @@ reportExistence chatPath depPath = do
 videoExtension :: FilePath
 videoExtension = ".mp4"
 
-audioExtensions :: [FilePath]
-audioExtensions = [".mp3", ".wav"]
+audioExtension :: FilePath
+audioExtension = ".mp3"
 
--- | Check whether what is expected exists. For audio, have to
--- perform a search on multiple possible names!
+-- | Check whether what is expected exists.
 checkMedia :: FilePath -- ^ CHAT path
            -> FilePath -- ^ CHAT media dir
            -> Media.ExpectedType
@@ -97,11 +96,7 @@ checkMedia _ _ Media.Skip = pure ()
 checkMedia chatPath chatMediaDir (Media.Video name) =
   reportExistence chatPath (chatMediaDir </> name <> videoExtension)
 checkMedia chatPath chatMediaDir (Media.Audio name) = do
-  let mediaBasePath = chatMediaDir </> name
-  unlessM (anyM (Directory.doesFileExist . (mediaBasePath <>))
-           audioExtensions) $
-    putStrLn $ chatPath <> ": cannot find media file with base name "
-                        <> mediaBasePath
+  reportExistence chatPath (chatMediaDir </> name <> audioExtension)
 
 checkPic :: FilePath -- ^ CHAT path
          -> FilePath -- ^ Chat media dir
