@@ -96,6 +96,13 @@ matrix:
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it
 - unset CC
+- |
+  if [ `uname` = "Darwin" ]
+  then
+    brew update
+    brew install pcre
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/opt/X11/lib/pkgconfig
+  fi
 
 # We want to always allow newer versions of packages when building on GHC HEAD
 - CABALARGS=""
@@ -127,11 +134,13 @@ install:
       ;;
   esac
 
+# Haddock triggers bug involving Template Haskell.
+#      stack --no-terminal $ARGS test --haddock --no-haddock-deps
 script:
 - |
   case "$BUILD" in
     stack)
-      stack --no-terminal $ARGS test --haddock --no-haddock-deps
+      stack --no-terminal $ARGS test
       ;;
     cabal)
       cabal configure --enable-tests --enable-benchmarks -v2 --ghc-options="-O0 -Werror"
