@@ -1,0 +1,58 @@
+name: update-chat-site
+version: '0.1.0.0'
+synopsis: Update a CHAT site
+description: Update a CHAT site
+category: Configuration
+author: Franklin Chen
+maintainer: franklinchen@franklinchen.com
+copyright: Franklin Chen
+license: BSD3
+github: TalkBank/update-chat-site
+extra-source-files:
+- README.md
+library:
+  source-dirs: src
+  exposed-modules:
+  - TalkBank.Media
+  dependencies:
+  - base >=4.7 && <5
+  - containers
+  - filepath
+  - pcre-heavy
+  - pcre-light
+  - stringable
+  - string-conversions
+  - template-haskell
+executables:
+  update-chat-site:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+    - -Wall
+    - -O2
+    - -threaded
+    - -rtsopts
+    - ! '"-with-rtsopts=-I0 -qg -qb"'
+    dependencies:
+    - base >=4 && <=5
+    - update-chat-site
+    - shake
+    - directory
+    - filepath
+    - bytestring
+    - hostname
+    - extra
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+    - -Wall
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - base
+    - update-chat-site
+    - hspec
+    - QuickCheck

@@ -2,9 +2,11 @@
 
 [![Build Status](https://travis-ci.org/TalkBank/update-chat-site.png)](https://travis-ci.org/TalkBank/update-chat-site)
 
+**This software is no longer being used.**
+
 This is used for the TalkBank project.
 
-At CMU, we have three machines that serve Web sites of CHAT material:
+At CMU, we have several Web sites of CHAT material, including:
 
 - http://childes.talkbank.org/
 - http://talkbank.org/
@@ -36,8 +38,7 @@ correctly to include `~/.local/bin`.
 
 ## Usage
 
-The program can be run from anywhere since it uses hardcoded logic to
-look for the required resources.
+TODO
 
 ```console
 $ update-chat-site

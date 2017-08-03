@@ -1,8 +1,13 @@
+-- This file has been generated from package.yaml by hpack version 0.18.1.
+--
+-- see: https://github.com/sol/hpack
+
 name:                update-chat-site
 version:             0.1.0.0
 synopsis:            Update a CHAT site
 description:         Update a CHAT site
-homepage:            https://github.com/TalkBank/update-chat-site
+homepage:            https://github.com/TalkBank/update-chat-site#readme
+bug-reports:         https://github.com/TalkBank/update-chat-site/issues
 license:             BSD3
 license-file:        LICENSE
 author:              Franklin Chen
@@ -10,49 +15,59 @@ maintainer:          franklinchen@franklinchen.com
 copyright:           Franklin Chen
 category:            Configuration
 build-type:          Simple
-extra-source-files:  README.md
-cabal-version:       >=1.10
-tested-with:         GHC == 7.10.2
+cabal-version:       >= 1.10
+
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/TalkBank/update-chat-site
 
 library
-  hs-source-dirs:      src
-  exposed-modules:     TalkBank.Media
-  other-modules:       TalkBank.Re
-  default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5
-                     , containers
-                     , filepath
-                     , pcre-heavy
-                     , pcre-light
-                     , stringable
-                     , string-conversions
-                     , template-haskell
-                     
+  hs-source-dirs:
+      src
+  exposed-modules:
+      TalkBank.Media
+  other-modules:
+      TalkBank.Re
+      Paths_update_chat_site
+  default-language: Haskell2010
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , filepath
+    , pcre-heavy
+    , pcre-light
+    , stringable
+    , string-conversions
+    , template-haskell
+
 executable update-chat-site
-  hs-source-dirs:      app
-  main-is:             Main.hs
-  default-language:    Haskell2010
-  ghc-options:         -Wall -O2 -threaded -rtsopts "-with-rtsopts=-I0 -qg -qb"
-  build-depends:       base >= 4 && <= 5
-                     , update-chat-site
-                     , shake
-                     , directory
-                     , filepath
-                     , bytestring
-                     , hostname
-                     , extra
+  hs-source-dirs:
+      app
+  main-is: Main.hs
+  default-language: Haskell2010
+  ghc-options: -Wall -O2 -threaded -rtsopts "-with-rtsopts=-I0 -qg -qb"
+  build-depends:
+      base >=4 && <=5
+    , update-chat-site
+    , shake
+    , directory
+    , filepath
+    , bytestring
+    , hostname
+    , extra
 
 test-suite spec
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-  build-depends:       base
-                     , update-chat-site
-                     , hspec
-                     , QuickCheck
-  ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
-  default-language:    Haskell2010
-                     
-source-repository head
-  type:                 git
-  location:             https://github.com/TalkBank/update-chat-site
+  type: exitcode-stdio-1.0
+  hs-source-dirs:
+      test
+  main-is: Spec.hs
+  build-depends:
+      base
+    , update-chat-site
+    , hspec
+    , QuickCheck
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+  default-language: Haskell2010
